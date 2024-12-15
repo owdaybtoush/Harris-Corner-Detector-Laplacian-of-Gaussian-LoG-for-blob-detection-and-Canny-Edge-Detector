@@ -1,0 +1,74 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage import feature
+
+# Read the image
+image = cv2.imread('/content/sample_data/mlp.png', cv2.IMREAD_GRAYSCALE)
+
+# ---------- Harris Corner Detector ----------
+def harris_corner_detector(image):
+    # Apply Harris Corner Detection
+    # Convert image to float32 type for better precision
+    img_float = np.float32(image)
+    harris_corners = cv2.cornerHarris(img_float, 2, 3, 0.04)
+    
+    # Dilate the corners to make them more visible
+    harris_corners = cv2.dilate(harris_corners, None)
+    
+    # Mark the corners on the image
+    image[harris_corners > 0.01 * harris_corners.max()] = 255
+    return image
+
+harris_result = harris_corner_detector(image.copy())
+
+# ---------- Laplacian of Gaussian (LoG) for Blob Detection ----------
+def log_blob_detection(image):
+    # Use OpenCV's Laplacian function for detecting blobs
+    log_image = cv2.GaussianBlur(image, (5, 5), 0)  # Apply Gaussian Blur first
+    log_image = cv2.Laplacian(log_image, cv2.CV_64F)  # Apply Laplacian to detect blobs
+    
+    # Normalize the result
+    log_image = np.absolute(log_image)
+    log_image = np.uint8(log_image)
+    return log_image
+
+log_result = log_blob_detection(image)
+
+# ---------- Canny Edge Detector ----------
+def canny_edge_detector(image):
+    # Use OpenCV's Canny function to detect edges
+    edges = cv2.Canny(image, 100, 200)  # You can adjust these thresholds
+    return edges
+
+canny_result = canny_edge_detector(image)
+
+# ---------- Display the results ----------
+plt.figure(figsize=(12, 8))
+
+# Harris Corner Detector
+plt.subplot(2, 2, 1)
+plt.title('Harris Corner Detector')
+plt.imshow(harris_result, cmap='gray')
+plt.axis('off')
+
+# Laplacian of Gaussian (LoG) for Blob Detection
+plt.subplot(2, 2, 2)
+plt.title('Laplacian of Gaussian (LoG) for Blob Detection')
+plt.imshow(log_result, cmap='gray')
+plt.axis('off')
+
+# Canny Edge Detector
+plt.subplot(2, 2, 3)
+plt.title('Canny Edge Detector')
+plt.imshow(canny_result, cmap='gray')
+plt.axis('off')
+
+# Original Image
+plt.subplot(2, 2, 4)
+plt.title('Original Image')
+plt.imshow(image, cmap='gray')
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
